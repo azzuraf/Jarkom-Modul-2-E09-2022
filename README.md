@@ -39,6 +39,39 @@ service bind9 restart
 
 Lakukan ping ke domain strix.operation.wise.e09.com dan www.strix.operation.wise.e09.com dari client
 
+## Nomor 8
+
+- Untuk konfigurasi web server diperlukan instalasi update, apache, dan php
+- Setelah itu konfigurasi server dibuat sesuai berikut dengan ServerName adalah `wise.e09.com` dan ServerAliasnya adalah `www.wise.e09.com` File ini disimpan dalam folder `/etc/apache2/sites-available/wise.e09.com`.
+- Kemudian file requirement untuk wise dipindahkan ke `var/www/wise.e09.com`
+- Setelah itu konfigurasi web server yang sudah dibuat di-enable dengan command `a2ensite wise.e09.com` dn
+
+## Nomor 9
+
+- Dalam mengubah URL `www.wise.yyy.com/index.php/home` menjadi `www.wise.yyy.com/home`, module RewriteRule digunakan pada file `/var/www/wise.e09.com/.htaccess` untuk dapat mengakses file .php.
+- Tambahkan directory `/var/www/wise.e09.com` pada file `/etc/apache2/sites-available/wise.e09.com.conf`
+- Restart apache2 dan url .php seharusnya sudah terubah.
+
+## Nomor 10
+
+- Tambahkan konfigurasi untuk alamat `eden.wise.e09.com` dengan serverAlias `www.eden.wise.e09.com` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
+- Gunakan `a2ensite eden.wise.e09.com` untuk mengaktifkan konfigurasi yang terlah dibuat
+- Restart apache2 dan konfigurasi web server sudah siap digunakan
+
+## Nomor 11
+
+- Tambahkan directory `/var/www/eden.wise.e09.com/public` tanpa opsi `AllowOverride All` dan hanya dengan opsi `Options +Indexes` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
+- Restart apache2 dan konfigurasi web server sudah siap digunakan
+
+## Nomor 12
+
+- Tambahkan konfigurasi ErrorDocument ddan diganti dengan halaman `/error/404.html` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
+- Restart apache2 dan konfigurasi web server sudah siap digunakan
+
+## Nomor 13
+
+- Tambahkan konfigurasi Alias `/js` untuk mempersingkat url `/var/www/eden.wise.e09.com/public/js` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
+- Restart apache 2 dan konfigurasi web server sudah siap digunakan
 
 **14. Loid meminta agar www.strix.operation.wise.yyy.com hanya bisa diakses dengan port 15000 dan port 15500**
 
