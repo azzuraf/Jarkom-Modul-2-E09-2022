@@ -144,6 +144,31 @@ echo "<?php echo 'yes nomor 10' ?>" > /var/www/eden.wise.e09.com/index.php
 - Tambahkan directory `/var/www/eden.wise.e09.com/public` tanpa opsi `AllowOverride All` dan hanya dengan opsi `Options +Indexes` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
 - Restart apache2 dan konfigurasi web server sudah siap digunakan
 
+```bash
+echo "
+<VirtualHost *:80>
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/eden.wise.e09.com
+        ServerName eden.wise.e09.com
+        ServerAlias www.eden.wise.e09.com
+
+        <Directory /var/www/eden.wise.e09.com/public>
+                Options +Indexes
+        </Directory>
+
+        ErrorLog \${APACHE_LOG_DIR}/error.log
+        CustomLog \${APACHE_LOG_DIR}/access.log combined
+
+        <Directory /var/www/wise.e09.com>
+                Options +FollowSymLinks -Multiviews
+                AllowOverride All
+        </Directory>
+</VirtualHost>
+" > /etc/apache2/sites-available/eden.wise.e09.com.conf
+service apache2 restart
+```
+
 ## Nomor 12
 
 - Tambahkan konfigurasi ErrorDocument ddan diganti dengan halaman `/error/404.html` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
