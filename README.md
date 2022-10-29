@@ -4,11 +4,11 @@
 2. Azzura Ferliani Ramadhani (5025201190)
 3. Ingwer Ludwig Nommensen (5025201259)
 
-## Soal 1
-WISE akan dijadikan sebagai DNS Master, Berlint akan dijadikan DNS Slave, dan Eden akan digunakan sebagai Web Server. Terdapat 2 Client yaitu SSS, dan Garden. Semua node terhubung pada router Ostania, sehingga dapat mengakses internet.<br/><br/>
+## Nomor 1
+**WISE akan dijadikan sebagai DNS Master, Berlint akan dijadikan DNS Slave, dan Eden akan digunakan sebagai Web Server. Terdapat 2 Client yaitu SSS, dan Garden. Semua node terhubung pada router Ostania, sehingga dapat mengakses internet.**<br/><br/>
 ![image](https://user-images.githubusercontent.com/52819640/198832193-9634ea13-a95a-4a26-839d-0c7bb8880319.png)<br/>
-1. Membuat topologi seperti gambar di atas
-2. Mengatur konfigurasi tiap node menjadi seperti berikut:
+Membuat topologi seperti gambar di atas
+Mengatur konfigurasi tiap node menjadi seperti berikut:
 ```sh
 - Ostania : 10.26.0.0     | Router
 - WISE : 10.26.1.2        | DNS Master
@@ -17,9 +17,81 @@ WISE akan dijadikan sebagai DNS Master, Berlint akan dijadikan DNS Slave, dan Ed
 - Berlint : 10.26.3.2     | DNS Slave
 - Eden : 10.26.3.3        | Web Master
 ```
-3. Menyambungkan router ke internet dengan command ``` iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE -s 10.26.0.0/16```
-## Soal 2
+Menyambungkan router ke internet dengan command ``` iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE -s 10.26.0.0/16```
+## Nomor 2
+**Untuk mempermudah mendapatkan informasi mengenai misi dari Handler, bantulah Loid membuat website utama dengan akses wise.yyy.com dengan alias www.wise.yyy.com pada folder wise.**<br/><br/>
+Lakukan update dan install bind9 terlebih dahulu
+```bash
+apt-get update
+apt-get install bind9 -y
+```
+Isikan configurasi domain wise.e09.com sesuai dengan syntax berikut:
+```bash
+zone "wise.e09.com" {
+        type master;
+        file "/etc/bind/wise/wise.e09.com";
+};
+```
+Buat folder wise di dalam /etc/bind dengan menggunakan command ```mkdir /etc/bind/wise```
+Selanjutnya buat file ```wise.e09.com``` dengan isian sebagai berikut:
+```bash
+\$TTL    604800
+@       IN      SOA     wise.e09.com. root.wise.e09.com. (
+                        2               ; Serial
+                        604800          ; Refresh
+                        86400           ; Retry
+                        2419200         ; Expire
+                        604800 )        ; Negative Cache TTL
+;
+@               IN      NS      wise.e09.com.
+@               IN      A       10.26.1.2 ; IP Wise
+www             IN      CNAME   wise.e09.com.
+```
+Lakukan restart bind9 dengan command ```service bind9 restart```
 
+## Nomor 3
+**Setelah itu ia juga ingin membuat subdomain eden.wise.yyy.com dengan alias www.eden.wise.yyy.com yang diatur DNS-nya di WISE dan mengarah ke Eden.**<br/><br/>
+Pada konfigurasi DNS Master Wise, dapat ditambahkan IP address dari Eden dan alamat aliasnya yang akan mengarah ke Eden
+```bash
+\$TTL    604800
+@       IN      SOA     wise.e09.com. root.wise.e09.com. (
+                        2               ; Serial
+                        604800          ; Refresh
+                        86400           ; Retry
+                        2419200         ; Expire
+                        604800 )        ; Negative Cache TTL
+;
+@              IN      NS      wise.e09.com.
+@              IN      A       10.26.1.2 ; IP Wise
+www            IN      CNAME   wise.e09.com.
+eden           IN      A       10.26.3.3 ; IP Eden
+www.eden       IN      CNAME   eden.wise.e09.com.
+```
+Lakukan restart bind9 dengan command ```service bind9 restart```
+
+## Nomor 4
+**Buat juga reverse domain untuk domain utama.**<br/><br/>
+Tambahkan zone reverse DNS pada file /etc/bind/named.conf.local
+```bash
+zone "2.26.10.in-addr.arpa" {
+        type master;
+        file "/etc/bind/wise/2.26.10.in-addr.arpa";
+};
+```
+Tambahkan reverse DNS (NS dan PTR) pada file /etc/bind/wise/2.26.10.in-addr.arpa
+```bash
+\$TTL    604800
+@       IN      SOA     wise.e09.com. root.wise.e09.com. (
+                        2               ; Serial
+                        604800          ; Refresh
+                        86400           ; Retry
+                        2419200         ; Expire
+                        604800 )        ; Negative Cache TTL
+;
+2.26.10.in-addr.arpa.   IN      NS      wise.e09.com.
+2                       IN      PTR     wise.e09.com.
+```
+Lakukan restart bind9 dengan command ```service bind9 restart```
 ## Nomor 7
 Untuk informasi yang lebih spesifik mengenai Operation Strix, buatlah subdomain melalui Berlint dengan akses strix.operation.wise.yyy.com dengan alias www.strix.operation.wise.yyy.com yang mengarah ke Eden
 
