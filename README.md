@@ -92,8 +92,73 @@ Tambahkan reverse DNS (NS dan PTR) pada file /etc/bind/wise/2.26.10.in-addr.arpa
 2                       IN      PTR     wise.e09.com.
 ```
 Lakukan restart bind9 dengan command ```service bind9 restart```
+
+## Nomor 5 
+** Di nomor 5 diminta untuk membuat Berlint menjadi slave
+pertama kita membuka file ```/etc/bind/named.conf.local``` dengan nano untuk menambahkan zone
+```bash
+zone "wise.e09.com" {
+        type master;
+        notify yes;
+        also-notify {10.26.3.2;};  //Masukan IP Berlint tanpa tanda petik
+        allow-transfer {10.26.3.2;}; // Masukan IP Berlint tanpa tanda petik
+        file "/etc/bind/wise/wise.e09.com";
+```
+ke node Berlint dan mengkonfigurasi file ```>/etc/bind/name.conf.local``` untuk menambahkan node slave yang nantinya maternya mengarah ke ip wise
+```bash
+zone "wise.e09.com" {
+        type slave;
+        masters { 192.172.1.2; }; // Masukan IP Wise tanpa tanda petik
+        file "/var/lib/bind/wise.e09.com";
+};
+```
+selanjutnya lakukan restart dengan ```servise bind9 restart```
+menuju ke wise dan matikan node wise dengan ```servise bind9 stop```
+lalu ke node client (SSS atau Garden) dan lakukan ping ke website utama yaitu ```wise.e09.com```
+
+## Nomor 6
+membuat subdomain yang khusus untuk operation yaitu operation.wise.yyy.com dengan alias www.operation.wise.yyy.com yang didelegasikan dari WISE ke Berlint dengan IP menuju ke Eden dalam folder operation
+- pertama lakukan konfigurasi di node wise dengan ```/etc/bind/named.conf.local``` untuk menambahkan zone
+```bash 
+zone "wise.e09.com" {
+    type master;
+    notify yes;
+    also-notify { 192.200.3.2; }; // Masukan IP Berlint
+    allow-transfer { 192.200.3.2; }; // Masukan IP Berlint
+    file "/etc/bind/wise/wise.e09.com";
+};
+```
+- lakukan Restart dengan ```service bind9 restart``` 
+- Pada file ```/etc/bind/wise/wise.e09.com``` lakukan konfigurasi dengan menambahkan 
+```bash
+ns1 IN A 192.190.3.2;
+```
+- setelah itu membuka file ```/etc/bind/named.conf.options``` untuk menambahkan 
+```bash 
+allow-query{any;};
+```
+- buka ```file /etc/bind/named.conf.local``` dan mengcoment 
+```bash
+//notify yes; //also-notify {192.190.3.2;}; 
+```
+jangan lupa lakukan restart
+
+- kemudian kita ke berlint pada berlint ini kita melakukan membuka file /etc/bind/named.conf.options kita tambahkan ```allow-query{any;};``` 
+- setelah itu ke file /etc/bind/named.conf.local disini kita menambahkan zone 
+```bash
+"operation.wise.d11.com"{ type master; 
+file "/etc/bind/operation/operation.wise.d11.com"; }; 
+```
+- membuat file mkdir ```/etc/bind/operation``` 
+kemudian membuka file ```/etc/bind/operation/operation.wise.e09.com``` menambahkan 
+```bash
+@ IN NS operation.wise.d11.com. @ IN A 192.190.3.3 ;
+ip Eden www IN CNAME operation.wise.d11.com. 
+```
+- setelah itu melakukan restart setelah itu melakukan ping www.operation.wise.d11.com
+
 ## Nomor 7
-**Untuk informasi yang lebih spesifik mengenai Operation Strix, buatlah subdomain melalui Berlint dengan akses strix.operation.wise.yyy.com dengan alias www.strix.operation.wise.yyy.com yang mengarah ke Eden**<br/><br/>
+Untuk informasi yang lebih spesifik mengenai Operation Strix, buatlah subdomain melalui Berlint dengan akses strix.operation.wise.yyy.com dengan alias www.strix.operation.wise.yyy.com yang mengarah ke Eden
 
 Pada server Berlint buat domain untuk strix.operation.wise.e09.com dengan alias www.strix.operation.wise.e09.com. Instalasi bind terlebih dahulu
 ```bash
@@ -113,7 +178,7 @@ service bind9 restart
 Lakukan ping ke domain strix.operation.wise.e09.com dan www.strix.operation.wise.e09.com dari client
 
 ## Nomor 8
-**Setelah melakukan konfigurasi server, maka dilakukan konfigurasi Webserver. Pertama dengan webserver www.wise.yyy.com. Pertama, Loid membutuhkan webserver dengan DocumentRoot pada /var/www/wise.yyy.com**<br/><br/>
+
 - Untuk konfigurasi web server diperlukan instalasi update, apache, dan php
 - Setelah itu konfigurasi server dibuat sesuai berikut dengan ServerName adalah `wise.e09.com` dan ServerAliasnya adalah `www.wise.e09.com` File ini disimpan dalam folder `/etc/apache2/sites-available/wise.e09.com`.
 - Kemudian file requirement untuk wise dipindahkan ke `var/www/wise.e09.com`
@@ -148,7 +213,7 @@ service apache2 restart
 ```
 
 ## Nomor 9
-**Setelah itu, Loid juga membutuhkan agar url www.wise.yyy.com/index.php/home dapat menjadi menjadi www.wise.yyy.com/home**<br/><br/>
+
 - Dalam mengubah URL `www.wise.yyy.com/index.php/home` menjadi `www.wise.yyy.com/home`, module RewriteRule digunakan pada file `/var/www/wise.e09.com/.htaccess` untuk dapat mengakses file .php.
 - Tambahkan directory `/var/www/wise.e09.com` pada file `/etc/apache2/sites-available/wise.e09.com.conf`
 - Restart apache2 dan url .php seharusnya sudah terubah.
@@ -181,12 +246,28 @@ service apache2 restart
 ```
 
 ## Nomor 10
-**Setelah itu, pada subdomain www.eden.wise.yyy.com, Loid membutuhkan penyimpanan aset yang memiliki DocumentRoot pada /var/www/eden.wise.yyy.com**<br/><br/>
+
 - Tambahkan konfigurasi untuk alamat `eden.wise.e09.com` dengan serverAlias `www.eden.wise.e09.com` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
 - Gunakan `a2ensite eden.wise.e09.com` untuk mengaktifkan konfigurasi yang terlah dibuat
 - Restart apache2 dan konfigurasi web server sudah siap digunakan
 
 ```bash
+echo "
+<VirtualHost *:80>
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/eden.wise.e09.com
+        ServerName eden.wise.e09.com
+        ServerAlias www.eden.wise.e09.com
+
+        ErrorLog \${APACHE_LOG_DIR}/error.log
+        CustomLog \${APACHE_LOG_DIR}/access.log combined
+
+        <Directory /var/www/wise.e09.com>
+                Options +FollowSymLinks -Multiviews
+                AllowOverride All
+        </Directory>
+</VirtualHost>
 " > /etc/apache2/sites-available/eden.wise.e09.com.conf
 a2ensite eden.wise.e09.com
 mkdir /var/www/eden.wise.e09.com
@@ -196,139 +277,71 @@ echo "<?php echo 'yes nomor 10' ?>" > /var/www/eden.wise.e09.com/index.php
 ```
 
 ## Nomor 11
-**Akan tetapi, pada folder /public, Loid ingin hanya dapat melakukan directory listing saja** <br/><br/>
+
 - Tambahkan directory `/var/www/eden.wise.e09.com/public` tanpa opsi `AllowOverride All` dan hanya dengan opsi `Options +Indexes` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
 - Restart apache2 dan konfigurasi web server sudah siap digunakan
 
 ```bash
-<Directory /var/www/eden.wise.e09.com/public>
-        Options +Indexes
-</Directory>
+echo "
+<VirtualHost *:80>
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/eden.wise.e09.com
+        ServerName eden.wise.e09.com
+        ServerAlias www.eden.wise.e09.com
+
+        <Directory /var/www/eden.wise.e09.com/public>
+                Options +Indexes
+        </Directory>
+
+        ErrorLog \${APACHE_LOG_DIR}/error.log
+        CustomLog \${APACHE_LOG_DIR}/access.log combined
+
+        <Directory /var/www/wise.e09.com>
+                Options +FollowSymLinks -Multiviews
+                AllowOverride All
+        </Directory>
+</VirtualHost>
+" > /etc/apache2/sites-available/eden.wise.e09.com.conf
+service apache2 restart
 ```
 
 ## Nomor 12
-**Tidak hanya itu, Loid juga ingin menyiapkan error file 404.html pada folder /error untuk mengganti error kode pada apache**<br/><br/>
+
 - Tambahkan konfigurasi ErrorDocument ddan diganti dengan halaman `/error/404.html` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
 - Restart apache2 dan konfigurasi web server sudah siap digunakan
 
-```bash
-ErrorDocument 404 /error/404.html
-ErrorDocument 502 /error/404.html
-ErrorDocument 503 /error/404.html
-ErrorDocument 504 /error/404.html
-```
-
 ## Nomor 13
-**Loid juga meminta Franky untuk dibuatkan konfigurasi virtual host. Virtual host ini bertujuan untuk dapat mengakses file asset www.eden.wise.yyy.com/public/js menjadi www.eden.wise.yyy.com/js** <br/><br/>
+
 - Tambahkan konfigurasi Alias `/js` untuk mempersingkat url `/var/www/eden.wise.e09.com/public/js` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
 - Restart apache 2 dan konfigurasi web server sudah siap digunakan
-(dari nomor sebelumnya, tambahkan ini di VirtualHost *:80
-```bash
-Alias \"/js\" \"/var/www/eden.wise.e09.com/public/js\"
-```
 
 ## Nomor 14
-**Loid meminta agar www.strix.operation.wise.yyy.com hanya bisa diakses dengan port 15000 dan port 15500**<br/><br/>
+Loid meminta agar www.strix.operation.wise.yyy.com hanya bisa diakses dengan port 15000 dan port 15500**
 
 - Tambahkan configuration pada /etc/apache2/sites-available/strix.operation.wise.e09.com.conf
 - Setting port
 - Buat folder /var/www/strix.operation.wise.e09.com dan masukkan resource yang ada ke daam folder tersebut
 - Restart apache2 kemudian akses www.strix.operation.wise.yyy.com dari client menggunakan port 15000 atau 15500
 
-```bash
-echo "
-<VirtualHost *:15000>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/strix.operation.wise.e09.com
-        ServerName strix.operation.wise.e09.com
-        ServerAlias www.strix.operation.wise.e09.com
-
-
-        ErrorLog \${APACHE_LOG_DIR}/error.log
-        CustomLog \${APACHE_LOG_DIR}/access.log combined
-</VirtualHost>
-<VirtualHost *:15500>        
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/strix.operation.wise.e09.com
-        ServerName strix.operation.wise.e09.com
-        ServerAlias www.strix.operation.wise.e09.com
-        
-
-        ErrorLog \${APACHE_LOG_DIR}/error.log
-        CustomLog \${APACHE_LOG_DIR}/access.log combined
-</VirtualHost>
-" > /etc/apache2/sites-available/strix.operation.wise.e09.com.conf
-a2ensite strix.operation.wise.e09.com
-service apache2 restart
-mkdir /var/www/strix.operation.wise.e09.com
-cp -r /root/Praktikum-Modul-2-Jarkom/strix.operation.wise/ ./var/www/strix.operation.wise.e09.com/
-echo "
-<?php
-        echo 'selamat 14';
-?>
-" > /var/www/strix.operation.wise.e09.com/index.php
-echo "
-# If you just change the port or add more ports here, you will likely also
-# have to change the VirtualHost statement in
-# /etc/apache2/sites-enabled/000-default.conf
-
-Listen 80
-Listen 15000
-Listen 15500
-<IfModule ssl_module>
-        Listen 443
-</IfModule>
-
-<IfModule mod_gnutls.c>
-        Listen 443
-</IfModule>
-" > /etc/apache2/ports.conf
-
-service apache2 restart
-```
-
 
 ## Nomor 15
-**dengan autentikasi username Twilight dan password opStrix dan file di /var/www/strix.operation.wise.yyy**<br/><br/>
+dengan autentikasi username Twilight dan password opStrix dan file di /var/www/strix.operation.wise.yyy**
 
 - Masukkan command pada Eden
-- Tambahkan configuration pada /etc/apache2/sites-available/strix.operation.wise.e09.com.conf di keedua virtualhost
+- Tambahkan configuration pada /etc/apache2/sites-available/strix.operation.wise.e09.com.conf
 - Restart apache2 kemudian akses www.strix.operation.wise.yyy.com dari client menggunakan username dan password yang sudah di-setup
-```bash
-<Directory \"/var/www/strix.operation.wise.e09.com\">
-                AuthType Basic
-                AuthName \"Restricted Content\"
-                AuthUserFile /etc/apache2/.htpasswd
-                Require valid-user
-</Directory>
-```
-
 
 ## Nomor 16
-**dan setiap kali mengakses IP Eden akan dialihkan secara otomatis ke www.wise.yyy.com**<br/><br/>
+dan setiap kali mengakses IP Eden akan dialihkan secara otomatis ke www.wise.yyy.com**
 
 - Tambahkan konfigurasi pada /etc/apache2/sites-available/000-default.conf
 - Tambahkan konfigurasi port apache2
 - Enable 000-default.conf kemudian restart service apache2, akses IP Eden dari client
-di VirtualHost *:80
-```bash
-ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/html
-
-        RewriteEngine On
-        RewriteCond %{HTTP_HOST} !^wise.e09.com$
-        RewriteRule /.* http://wise.e09.com/ [R]
-```
-dari echo VirtualHost kemudian 
-```bash
-> /etc/apache2/sites-available/000-default.conf
-```
-
 
 ## Nomor 17
-**Karena website www.eden.wise.yyy.com semakin banyak pengunjung dan banyak modifikasi sehingga banyak gambar-gambar yang random, maka Loid ingin mengubah request gambar yang memiliki substring "eden" akan diarahkan menuju eden.png**<br/><br/>
+Karena website www.eden.wise.yyy.com semakin banyak pengunjung dan banyak modifikasi sehingga banyak gambar-gambar yang random, maka Loid ingin mengubah request gambar yang memiliki substring "eden" akan diarahkan menuju eden.png**
 
 - Tambahkan module rewrite pada .htaccess
 - Tambahkan konfigurasi pada /etc/apache2/sites-available/eden.wise.e09.com.conf
-- Kemudian enable module rewrite dan restart service apache2. Akses gambar dari client.
+- mudian enable module rewrite dan restart service apache2. Akses gambar dari client.
