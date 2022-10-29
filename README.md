@@ -100,15 +100,15 @@ pertama kita membuka file ```/etc/bind/named.conf.local``` dengan nano untuk men
 zone "wise.e09.com" {
         type master;
         notify yes;
-        also-notify {10.26.3.2;};  //Masukan IP Berlint tanpa tanda petik
-        allow-transfer {10.26.3.2;}; // Masukan IP Berlint tanpa tanda petik
+        also-notify {10.26.3.2;};  //Masukan IP Berlint 
+        allow-transfer {10.26.3.2;}; // Masukan IP Berlint 
         file "/etc/bind/wise/wise.e09.com";
 ```
 ke node Berlint dan mengkonfigurasi file ```>/etc/bind/name.conf.local``` untuk menambahkan node slave yang nantinya maternya mengarah ke ip wise
 ```bash
 zone "wise.e09.com" {
         type slave;
-        masters { 192.172.1.2; }; // Masukan IP Wise tanpa tanda petik
+        masters { 192.172.1.2; }; // Masukan IP Wise 
         file "/var/lib/bind/wise.e09.com";
 };
 ```
@@ -118,44 +118,69 @@ lalu ke node client (SSS atau Garden) dan lakukan ping ke website utama yaitu ``
 
 ## Nomor 6
 membuat subdomain yang khusus untuk operation yaitu operation.wise.yyy.com dengan alias www.operation.wise.yyy.com yang didelegasikan dari WISE ke Berlint dengan IP menuju ke Eden dalam folder operation
-- pertama lakukan konfigurasi di node wise dengan ```/etc/bind/named.conf.local``` untuk menambahkan zone
+- pertama lakukan konfigurasi di node wise dengan ```nano /etc/bind/wise/wise.e09.com``` untuk menambahkan zone
 ```bash 
-zone "wise.e09.com" {
-    type master;
-    notify yes;
-    also-notify { 192.200.3.2; }; // Masukan IP Berlint
-    allow-transfer { 192.200.3.2; }; // Masukan IP Berlint
-    file "/etc/bind/wise/wise.e09.com";
-};
+TTL    604800
+@       IN      SOA     wise.a07.com. root.wise.a07.com. (
+                                2       ; Serial
+                        604800          ; Refresh
+                        86400           ; Retry
+                        2419200         ; Expire
+                        604800 )        ; Negative Cache TTL
+;
+@               IN      NS      wise.a07.com.
+@               IN      A       192.172.3.3 ; IP Eden
+www             IN      CNAME   wise.a07.com.
+eden           IN      A       192.172.3.3 ; IP Eden
+www.eden       IN      CNAME   eden.wise.a07.com.
+ns1             IN      A       192.172.3.2; IP Berlint
+operation           IN      NS      ns1
 ```
-- lakukan Restart dengan ```service bind9 restart``` 
-- Pada file ```/etc/bind/wise/wise.e09.com``` lakukan konfigurasi dengan menambahkan 
+- edit file di wise dengan ```/etc/bind/named.conf.options``` dan tambahkan
 ```bash
-ns1 IN A 192.190.3.2;
-```
-- setelah itu membuka file ```/etc/bind/named.conf.options``` untuk menambahkan 
-```bash 
 allow-query{any;};
 ```
-- buka ```file /etc/bind/named.conf.local``` dan mengcoment 
+- edit file di ```/etc/bind/named.conf.local```
 ```bash
-//notify yes; //also-notify {192.190.3.2;}; 
+zone "operation.wise.e09.com"{
+        type master;
+        file "/etc/bind/operation/operation.wise.e09.com";
+};
 ```
-jangan lupa lakukan restart
-
-- kemudian kita ke berlint pada berlint ini kita melakukan membuka file /etc/bind/named.conf.options kita tambahkan ```allow-query{any;};``` 
-- setelah itu ke file /etc/bind/named.conf.local disini kita menambahkan zone 
+- lakukan restart dengan ```service bind9 restart```
+- selanjutnya pada node Berlint edit file ```/etc/bind/named.conf.options```
 ```bash
-"operation.wise.d11.com"{ type master; 
-file "/etc/bind/operation/operation.wise.d11.com"; }; 
+allow-query{any;};
 ```
-- membuat file mkdir ```/etc/bind/operation``` 
-kemudian membuka file ```/etc/bind/operation/operation.wise.e09.com``` menambahkan 
+- edit file
+```bash 
+zone "wise.e09.com" {
+        type slave;
+        masters { 10.26.1.2; }; // Masukan IP Wise 
+        file "/var/lib/bind/wise.e09.com";
+};
+```
+- selanjutnya buat direktori dengan nama operation
 ```bash
-@ IN NS operation.wise.d11.com. @ IN A 192.190.3.3 ;
-ip Eden www IN CNAME operation.wise.d11.com. 
+mkdir /etc/bind/operation
+cp /etc/bind/db.local /etc/bind/wise/operation.wise.e09.com
 ```
-- setelah itu melakukan restart setelah itu melakukan ping www.operation.wise.d11.com
+- di dalamnya tambahkan 
+```bash 
+TTL    604800
+@       IN      SOA     operation.wise.a07.com. root.operation.wise.a07.com. (
+                                2      ; Serial
+                        604800         ; Refresh
+                        86400          ; Retry
+                        2419200        ; Expire
+                        604800 )       ; Negative Cache TTL
+;
+@               IN      NS      operation.wise.a07.com.
+@               IN      A       192.172.3.3       ;ip Eden
+www             IN      CNAME   operation.wise.a07.com.
+```
+- lakukan restart ```service bind9 restart```
+- lalu lakukan ping operation.wise.e09.com pada client
 
 ## Nomor 7
 Untuk informasi yang lebih spesifik mengenai Operation Strix, buatlah subdomain melalui Berlint dengan akses strix.operation.wise.yyy.com dengan alias www.strix.operation.wise.yyy.com yang mengarah ke Eden
