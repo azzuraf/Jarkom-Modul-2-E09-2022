@@ -187,22 +187,6 @@ service apache2 restart
 - Restart apache2 dan konfigurasi web server sudah siap digunakan
 
 ```bash
-echo "
-<VirtualHost *:80>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/eden.wise.e09.com
-        ServerName eden.wise.e09.com
-        ServerAlias www.eden.wise.e09.com
-
-        ErrorLog \${APACHE_LOG_DIR}/error.log
-        CustomLog \${APACHE_LOG_DIR}/access.log combined
-
-        <Directory /var/www/wise.e09.com>
-                Options +FollowSymLinks -Multiviews
-                AllowOverride All
-        </Directory>
-</VirtualHost>
 " > /etc/apache2/sites-available/eden.wise.e09.com.conf
 a2ensite eden.wise.e09.com
 mkdir /var/www/eden.wise.e09.com
@@ -217,28 +201,9 @@ echo "<?php echo 'yes nomor 10' ?>" > /var/www/eden.wise.e09.com/index.php
 - Restart apache2 dan konfigurasi web server sudah siap digunakan
 
 ```bash
-echo "
-<VirtualHost *:80>
-
-        ServerAdmin webmaster@localhost
-        DocumentRoot /var/www/eden.wise.e09.com
-        ServerName eden.wise.e09.com
-        ServerAlias www.eden.wise.e09.com
-
-        <Directory /var/www/eden.wise.e09.com/public>
-                Options +Indexes
-        </Directory>
-
-        ErrorLog \${APACHE_LOG_DIR}/error.log
-        CustomLog \${APACHE_LOG_DIR}/access.log combined
-
-        <Directory /var/www/wise.e09.com>
-                Options +FollowSymLinks -Multiviews
-                AllowOverride All
-        </Directory>
-</VirtualHost>
-" > /etc/apache2/sites-available/eden.wise.e09.com.conf
-service apache2 restart
+<Directory /var/www/eden.wise.e09.com/public>
+        Options +Indexes
+</Directory>
 ```
 
 ## Nomor 12
@@ -246,10 +211,21 @@ service apache2 restart
 - Tambahkan konfigurasi ErrorDocument ddan diganti dengan halaman `/error/404.html` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
 - Restart apache2 dan konfigurasi web server sudah siap digunakan
 
+```bash
+ErrorDocument 404 /error/404.html
+ErrorDocument 502 /error/404.html
+ErrorDocument 503 /error/404.html
+ErrorDocument 504 /error/404.html
+```
+
 ## Nomor 13
 
 - Tambahkan konfigurasi Alias `/js` untuk mempersingkat url `/var/www/eden.wise.e09.com/public/js` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
 - Restart apache 2 dan konfigurasi web server sudah siap digunakan
+(dari nomor sebelumnya, tambahkan ini di VirtualHost *:80
+```bash
+Alias \"/js\" \"/var/www/eden.wise.e09.com/public/js\"
+```
 
 ## Nomor 14
 Loid meminta agar www.strix.operation.wise.yyy.com hanya bisa diakses dengan port 15000 dan port 15500**
@@ -259,13 +235,75 @@ Loid meminta agar www.strix.operation.wise.yyy.com hanya bisa diakses dengan por
 - Buat folder /var/www/strix.operation.wise.e09.com dan masukkan resource yang ada ke daam folder tersebut
 - Restart apache2 kemudian akses www.strix.operation.wise.yyy.com dari client menggunakan port 15000 atau 15500
 
+```bash
+echo "
+<VirtualHost *:15000>
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/strix.operation.wise.e09.com
+        ServerName strix.operation.wise.e09.com
+        ServerAlias www.strix.operation.wise.e09.com
+
+
+        ErrorLog \${APACHE_LOG_DIR}/error.log
+        CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+<VirtualHost *:15500>        
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/strix.operation.wise.e09.com
+        ServerName strix.operation.wise.e09.com
+        ServerAlias www.strix.operation.wise.e09.com
+        
+
+        ErrorLog \${APACHE_LOG_DIR}/error.log
+        CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+" > /etc/apache2/sites-available/strix.operation.wise.e09.com.conf
+a2ensite strix.operation.wise.e09.com
+service apache2 restart
+mkdir /var/www/strix.operation.wise.e09.com
+cp -r /root/Praktikum-Modul-2-Jarkom/strix.operation.wise/ ./var/www/strix.operation.wise.e09.com/
+echo "
+<?php
+        echo 'selamat 14';
+?>
+" > /var/www/strix.operation.wise.e09.com/index.php
+echo "
+# If you just change the port or add more ports here, you will likely also
+# have to change the VirtualHost statement in
+# /etc/apache2/sites-enabled/000-default.conf
+
+Listen 80
+Listen 15000
+Listen 15500
+<IfModule ssl_module>
+        Listen 443
+</IfModule>
+
+<IfModule mod_gnutls.c>
+        Listen 443
+</IfModule>
+" > /etc/apache2/ports.conf
+
+service apache2 restart
+```
+
 
 ## Nomor 15
 dengan autentikasi username Twilight dan password opStrix dan file di /var/www/strix.operation.wise.yyy**
 
 - Masukkan command pada Eden
-- Tambahkan configuration pada /etc/apache2/sites-available/strix.operation.wise.e09.com.conf
+- Tambahkan configuration pada /etc/apache2/sites-available/strix.operation.wise.e09.com.conf di keedua virtualhost
 - Restart apache2 kemudian akses www.strix.operation.wise.yyy.com dari client menggunakan username dan password yang sudah di-setup
+```bash
+<Directory \"/var/www/strix.operation.wise.e09.com\">
+                AuthType Basic
+                AuthName \"Restricted Content\"
+                AuthUserFile /etc/apache2/.htpasswd
+                Require valid-user
+</Directory>
+```
+
 
 ## Nomor 16
 dan setiap kali mengakses IP Eden akan dialihkan secara otomatis ke www.wise.yyy.com**
@@ -273,10 +311,24 @@ dan setiap kali mengakses IP Eden akan dialihkan secara otomatis ke www.wise.yyy
 - Tambahkan konfigurasi pada /etc/apache2/sites-available/000-default.conf
 - Tambahkan konfigurasi port apache2
 - Enable 000-default.conf kemudian restart service apache2, akses IP Eden dari client
+di VirtualHost *:80
+```bash
+ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/html
+
+        RewriteEngine On
+        RewriteCond %{HTTP_HOST} !^wise.e09.com$
+        RewriteRule /.* http://wise.e09.com/ [R]
+```
+dari echo VirtualHost kemudian 
+```bash
+> /etc/apache2/sites-available/000-default.conf
+```
+
 
 ## Nomor 17
 Karena website www.eden.wise.yyy.com semakin banyak pengunjung dan banyak modifikasi sehingga banyak gambar-gambar yang random, maka Loid ingin mengubah request gambar yang memiliki substring "eden" akan diarahkan menuju eden.png**
 
 - Tambahkan module rewrite pada .htaccess
 - Tambahkan konfigurasi pada /etc/apache2/sites-available/eden.wise.e09.com.conf
-- mudian enable module rewrite dan restart service apache2. Akses gambar dari client.
+- Kemudian enable module rewrite dan restart service apache2. Akses gambar dari client.
