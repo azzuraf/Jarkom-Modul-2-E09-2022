@@ -1,4 +1,8 @@
 # Jarkom-Modul-2-E09-2022
+### Anggota:
+1. Lia Kharisma Putri (5025201034)
+2. Azzura Ferliani Ramadhani (5025201190)
+3. Ingwer Ludwig Nommensen (5025201259)
 
 ## Soal 1
 WISE akan dijadikan sebagai DNS Master, Berlint akan dijadikan DNS Slave, dan Eden akan digunakan sebagai Web Server. Terdapat 2 Client yaitu SSS, dan Garden. Semua node terhubung pada router Ostania, sehingga dapat mengakses internet.<br/><br/>
