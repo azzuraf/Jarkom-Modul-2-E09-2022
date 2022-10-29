@@ -80,6 +80,33 @@ service apache2 restart
 - Dalam mengubah URL `www.wise.yyy.com/index.php/home` menjadi `www.wise.yyy.com/home`, module RewriteRule digunakan pada file `/var/www/wise.e09.com/.htaccess` untuk dapat mengakses file .php.
 - Tambahkan directory `/var/www/wise.e09.com` pada file `/etc/apache2/sites-available/wise.e09.com.conf`
 - Restart apache2 dan url .php seharusnya sudah terubah.
+```bash
+a2enmod rewrite
+service apache2 restart
+echo "
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule (.*) /index.php/\$1 [L]
+" >/var/www/wise.e09.com/.htaccess
+echo "
+<VirtualHost *:80>
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/wise.e09.com
+        ServerName wise.e09.com
+        ServerAlias www.wise.e09.com
+
+        ErrorLog \${APACHE_LOG_DIR}/error.log
+        CustomLog \${APACHE_LOG_DIR}/access.log combined
+
+        <Directory /var/www/wise.e09.com>
+                Options +FollowSymLinks -Multiviews
+                AllowOverride All
+        </Directory>
+</VirtualHost>
+" > /etc/apache2/sites-available/wise.e09.com.conf
+service apache2 restart
+```
 
 ## Nomor 10
 
