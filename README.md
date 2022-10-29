@@ -114,6 +114,31 @@ service apache2 restart
 - Gunakan `a2ensite eden.wise.e09.com` untuk mengaktifkan konfigurasi yang terlah dibuat
 - Restart apache2 dan konfigurasi web server sudah siap digunakan
 
+```bash
+echo "
+<VirtualHost *:80>
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/eden.wise.e09.com
+        ServerName eden.wise.e09.com
+        ServerAlias www.eden.wise.e09.com
+
+        ErrorLog \${APACHE_LOG_DIR}/error.log
+        CustomLog \${APACHE_LOG_DIR}/access.log combined
+
+        <Directory /var/www/wise.e09.com>
+                Options +FollowSymLinks -Multiviews
+                AllowOverride All
+        </Directory>
+</VirtualHost>
+" > /etc/apache2/sites-available/eden.wise.e09.com.conf
+a2ensite eden.wise.e09.com
+mkdir /var/www/eden.wise.e09.com
+cp -r /root/Praktikum-Modul-2-Jarkom/eden.wise/. /var/www/eden.wise.e09.com
+service apache2 restart
+echo "<?php echo 'yes nomor 10' ?>" > /var/www/eden.wise.e09.com/index.php
+```
+
 ## Nomor 11
 
 - Tambahkan directory `/var/www/eden.wise.e09.com/public` tanpa opsi `AllowOverride All` dan hanya dengan opsi `Options +Indexes` pada file `/etc/apache2/sites-available/eden.wise.e09.com.conf`
