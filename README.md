@@ -1,4 +1,20 @@
-# Jarkom-Modul-2-E09-
+# Jarkom-Modul-2-E09-2022
+
+## Soal 1
+WISE akan dijadikan sebagai DNS Master, Berlint akan dijadikan DNS Slave, dan Eden akan digunakan sebagai Web Server. Terdapat 2 Client yaitu SSS, dan Garden. Semua node terhubung pada router Ostania, sehingga dapat mengakses internet.<br/><br/>
+![image](https://user-images.githubusercontent.com/52819640/198832193-9634ea13-a95a-4a26-839d-0c7bb8880319.png)<br/>
+1. Membuat topologi seperti gambar di atas
+2. Mengatur konfigurasi tiap node menjadi seperti berikut:
+```sh
+- Ostania : 10.26.0.0     | Router
+- WISE : 10.26.1.2        | DNS Master
+- SSS : 10.26.2.2         | Client
+- Garden : 10.26.2.3      | Client
+- Berlint : 10.26.3.2     | DNS Slave
+- Eden : 10.26.3.3        | Web Master
+```
+3. Menyambungkan router ke internet dengan command ``` iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE -s 10.26.0.0/16```
+## Soal 2
 
 7. Untuk informasi yang lebih spesifik mengenai Operation Strix, buatlah subdomain melalui Berlint dengan akses strix.operation.wise.yyy.com dengan alias www.strix.operation.wise.yyy.com yang mengarah ke Eden
 
