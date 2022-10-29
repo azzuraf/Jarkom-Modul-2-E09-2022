@@ -46,6 +46,34 @@ Lakukan ping ke domain strix.operation.wise.e09.com dan www.strix.operation.wise
 - Setelah itu konfigurasi server dibuat sesuai berikut dengan ServerName adalah `wise.e09.com` dan ServerAliasnya adalah `www.wise.e09.com` File ini disimpan dalam folder `/etc/apache2/sites-available/wise.e09.com`.
 - Kemudian file requirement untuk wise dipindahkan ke `var/www/wise.e09.com`
 - Setelah itu konfigurasi web server yang sudah dibuat di-enable dengan command `a2ensite wise.e09.com` dn
+```bash
+-apt-get install apache2 -y
+service apache2 start
+apt-get install php -y
+apt-get install libapache2-mod-php7.0 -y
+service apache2 
+apt-get install ca-certificates openssl -y
+apt-get install unzip -y
+apt-get install git -y
+(download menggunakan wget)
+unzip -o /root/Praktikum-Modul-2-Jarkom/\*.zip -d /root/Praktikum-Modul-2-Jarkom
+echo "
+<VirtualHost *:80>
+
+        ServerAdmin webmaster@localhost
+        DocumentRoot /var/www/wise.e09.com
+        ServerName wise.e09.com
+        ServerAlias www.wise.e09.com
+
+        ErrorLog \${APACHE_LOG_DIR}/error.log
+        CustomLog \${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+" > /etc/apache2/sites-available/wise.e09.com.conf
+a2ensite wise.e09.com
+mkdir /var/www/wise.e09.com
+cp -r /root/Praktikum-Modul-2-Jarkom/wise/. /var/www/wise.e09.com
+service apache2 restart
+```
 
 ## Nomor 9
 
